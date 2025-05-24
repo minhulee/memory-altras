@@ -1,0 +1,32 @@
+{
+  "name": "memory-altras",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "vite",
+	"build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minhulee/memory-altras.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/minhulee/memory-altras/issues"
+  },
+  "homepage": "https://github.com/minhulee/memory-altras#readme",
+  "description": "",
+  "devDependencies": {
+    "@babylonjs/core": "^8.8.5",
+    "@babylonjs/gui": "^8.8.5",
+    "@babylonjs/inspector": "^8.8.5",
+    "@babylonjs/loaders": "^8.8.5",
+    "@babylonjs/materials": "^8.8.5",
+    "@babylonjs/post-processes": "^8.8.5",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}
