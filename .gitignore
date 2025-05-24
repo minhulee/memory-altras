@@ -1,0 +1,5 @@
+# node package
+node_modules
+
+# vscode setting file
+.vscode
