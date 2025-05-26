@@ -2,53 +2,81 @@ import {
   Engine,
   Scene,
   ArcRotateCamera,
+  StandardMaterial,
   HemisphericLight,
   Vector3,
   MeshBuilder,
+  Camera,
+  Color3,
+  Vector2,
+  PolygonMeshBuilder,
 } from '@babylonjs/core';
+import earcut from 'earcut';
 import '@babylonjs/inspector';
 
-// window.addEventListener("DOMContentLoaded", () => {
-// 	const canvas = document.createElement("canvas");
-// })
+(window as any).earcut = earcut;
 
-window.addEventListener('DOMContentLoaded', () => {
-  // canvas 생성 및 DOM에 추가
+// 바빌론 기본 요소
+interface BabylonAppContext {
+  canvas: HTMLCanvasElement;
+  engine: Engine;
+  scene: Scene;
+}
+
+// Dummy data
+const shape = [
+  { x: 0, y: 0 },
+  { x: 4, y: 0 },
+  { x: 4, y: 4 },
+  { x: 0, y: 4 },
+];
+
+const createCanvas = (): HTMLCanvasElement => {
   const canvas = document.createElement('canvas');
+
   canvas.style.width = '100%';
   canvas.style.height = '100%';
   canvas.id = 'renderCanvas';
   document.body.appendChild(canvas);
 
+  return canvas;
+};
+
+const createScene = (canvas: HTMLCanvasElement, engine: Engine): Scene => {
+  const scene = new Scene(engine);
+
+  return scene;
+};
+
+const initApp = (): BabylonAppContext => {
+  const canvas = createCanvas();
   const engine = new Engine(canvas, true);
+  const scene = createScene(canvas, engine);
 
-  const createScene = () => {
-    const scene = new Scene(engine);
+  return { canvas, engine, scene };
+};
 
-    const camera = new ArcRotateCamera(
-      'camera',
-      Math.PI / 2,
-      Math.PI / 3,
-      10,
-      Vector3.Zero(),
-      scene,
-    );
-    camera.attachControl(canvas, true);
+window.addEventListener('DOMContentLoaded', () => {
+  const { canvas, engine, scene } = initApp();
 
-    const light = new HemisphericLight('light', new Vector3(1, 1, 0), scene);
-    light.intensity = 0.9;
+  // 카메라 세팅
+  const camera = new ArcRotateCamera('camera', Math.PI / 2, Math.PI / 3, 15, Vector3.Zero(), scene);
+  camera.attachControl(canvas, true);
 
-    const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 2 }, scene);
-    const sphere2 = MeshBuilder.CreateSphere('sphere', { diameter: 2 }, scene);
-    sphere.position.y = 0.8;
+  // 메쉬 세팅
+  const polygon = new PolygonMeshBuilder('mesh', shape, scene);
+  const mesh = polygon.build(false, 0.5); // 높이는 0.1 정도로 낮게 설정
+  mesh.position.y = 0;
+  mesh.position.x = -2;
 
-    MeshBuilder.CreateGround('ground', { width: 10, height: 10 }, scene);
+  // 메테리얼 세팅
+  const semiTransparentMaterial = new StandardMaterial('semiTransparentMaterial', scene);
+  semiTransparentMaterial.diffuseColor = new Color3(0, 0, 0);
+  semiTransparentMaterial.alpha = 0.3;
+  mesh.material = semiTransparentMaterial;
 
-    return scene;
-  };
-
-  const scene = createScene();
-  scene.debugLayer.show(); // 개발용 inspector
+  // inspector show!
+  scene.debugLayer.show();
 
   engine.runRenderLoop(() => {
     scene.render();
