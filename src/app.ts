@@ -5,6 +5,7 @@ import {
   StandardMaterial,
   Vector3,
   MeshBuilder,
+  HemisphericLight,
   Mesh,
   AbstractMesh,
   Color3,
@@ -15,15 +16,10 @@ import '@babylonjs/inspector';
 import { FramingBehavior } from '@babylonjs/core/Behaviors/Cameras/framingBehavior';
 
 import { loader } from './loader.ts';
+import { BabylonAppContext } from './type.ts';
+import { buildMesh, buildPolygon } from './viewer.ts';
 
 (window as any).earcut = earcut;
-
-// 바빌론 기본 요소
-interface BabylonAppContext {
-  canvas: HTMLCanvasElement;
-  engine: Engine;
-  scene: Scene;
-}
 
 const createCanvas = (): HTMLCanvasElement => {
   const canvas = document.createElement('canvas');
@@ -51,8 +47,11 @@ const initApp = (): BabylonAppContext => {
 };
 
 window.addEventListener('DOMContentLoaded', async () => {
-  const geometry = await loader();
+  let geometry = await loader();
   const { canvas, engine, scene } = initApp();
+
+  //   geometry = geometry.filter((e) => e.type == 'Polygon');
+  console.log(geometry);
 
   // 카메라 세팅
   const camera = new ArcRotateCamera('camera', Math.PI / 2, Math.PI / 3, 15, Vector3.Zero(), scene);
@@ -68,29 +67,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   semiTransparentMaterial.alpha = 0.3;
   semiTransparentMaterial.backFaceCulling = false;
 
-  // 메쉬 세팅
-  const polygons = geometry.map(({ name, data }) => {
-    return {
-      name,
-      polygon: new PolygonMeshBuilder(name, data, scene),
-    };
-  });
-
-  const meshs = polygons.map(({ name, polygon }, idx) => {
-    const mesh = polygon.build(true, 30);
-
-    mesh.position.x = 0;
-    mesh.position.y = 0;
+  const polygons = buildPolygon(geometry, scene);
+  console.log(polygons);
+  const rootMesh = buildMesh(polygons, scene);
+  rootMesh.getChildMeshes().forEach((mesh) => {
     mesh.material = semiTransparentMaterial;
-
-    return { name, mesh };
-  });
-
-  const rootMesh = new Mesh('rootMesh', scene);
-
-  // 모든 meshs의 메쉬를 루트 메쉬의 자식으로 설정
-  meshs.forEach(({ mesh }) => {
-    mesh.setParent(rootMesh);
   });
 
   // camera는 ArcRotateCamera라고 가정
@@ -108,11 +89,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   const boundingInfo = rootMesh.getHierarchyBoundingVectors(true);
 
   camera.minZ = 0.1;
-  camera.maxZ = boundingInfo.max.subtract(boundingInfo.min).length() * 10;
+  //   camera.maxZ = boundingInfo.max.subtract(boundingInfo.min).length();
+  camera.maxZ = 10000000000;
 
   // 원하는 각도 세팅
   camera.alpha = Math.PI / 15;
-  camera.beta = Math.PI / 8;
+  camera.beta = Math.PI / 10;
 
   // rootMesh 전체 크기(반지름) 기준 계산
   const boundingSize = boundingInfo.max.subtract(boundingInfo.min);
@@ -120,7 +102,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   camera.radius = maxRadius;
 
-  rootMesh.position = Vector3.Zero();
+  //   rootMesh.position = Vector3.Zero();
 
   // inspector show!
   scene.debugLayer.show();
