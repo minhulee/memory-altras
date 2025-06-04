@@ -1,17 +1,23 @@
-import geo from '../data/TL_SCCO_SIG.json';
+import geo from '../data/LARD_ADM_SECT_SGG.json';
 import { Vector2 } from '@babylonjs/core';
 
-const scale = 1000;
+import { scale, mFeature, mGeometry } from './type.ts';
+
+function parseData(coords: any): Vector2[][] {
+  if (typeof coords[0][0] === 'number')
+    return [coords.map(([x, y]: [number, number]) => new Vector2(-y / scale, x / scale))];
+
+  return coords.flatMap(parseData);
+}
 
 export async function loader() {
-  const geometry = geo.features.map(({ geometry, properties }) => {
+  const geometry = geo.features.map(({ geometry, properties }: mFeature): mGeometry => {
     return {
-      name: properties.SIG_KOR_NM,
-      data: geometry.coordinates[0].map(([x, y]) => {
-        return new Vector2(-(y - 36.5) * scale, (x - 127.5) * scale);
-      }),
+      name: properties.SGG_NM,
+      type: geometry.type,
+      data: parseData(geometry.coordinates),
     };
   });
-  console.log(geometry);
+
   return geometry;
 }
