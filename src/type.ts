@@ -1,12 +1,13 @@
-import { Engine, Scene, PolygonMeshBuilder, Mesh, Vector2 } from '@babylonjs/core';
+import { Engine, Scene, PolygonMeshBuilder, Mesh, Vector2, ArcRotateCamera } from '@babylonjs/core';
 
 export const scale = 1000;
 
 // 바빌론 기본 요소
-export interface BabylonAppContext {
+export interface BabylonContext {
   canvas: HTMLCanvasElement;
   engine: Engine;
   scene: Scene;
+  camera: ArcRotateCamera;
 }
 
 // loader
@@ -21,12 +22,14 @@ export interface mFeature {
 }
 
 export interface mGeometry {
+  region: string;
   name: string;
   type: string;
   data: Vector2[][];
 }
 
 export interface mPolygon {
+  region: string;
   name: string;
   type: string;
   polygon: PolygonMeshBuilder[];

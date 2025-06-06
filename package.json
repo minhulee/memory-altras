@@ -24,7 +24,7 @@
     "@babylonjs/gui": "^8.8.5",
     "@babylonjs/inspector": "^8.8.5",
     "@babylonjs/loaders": "^8.8.5",
-    "@babylonjs/materials": "^8.8.5",
+    "@babylonjs/materials": "^8.11.0",
     "@babylonjs/post-processes": "^8.8.5",
     "@types/earcut": "^3.0.0",
     "earcut": "^3.0.1",
@@ -32,6 +32,6 @@
     "vite": "^6.3.5"
   },
   "sideEffects": [
-	"node_modules/@babylonjs/core/Behaviors/Cameras/framingBehavior.js"
+    "node_modules/@babylonjs/core/Behaviors/Cameras/framingBehavior.js"
   ]
 }

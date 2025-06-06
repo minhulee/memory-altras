@@ -10,14 +10,17 @@ function parseData(coords: any): Vector2[][] {
   return coords.flatMap(parseData);
 }
 
-export async function loader() {
-  const geometry = geo.features.map(({ geometry, properties }: mFeature): mGeometry => {
+export async function loader(): Promise<mGeometry[]> {
+  let geometry = geo.features.map(({ geometry, properties }) => {
+    let name = properties.SGG_NM.split(' ');
+    name = name[0].endsWith('도') ? name.slice(1) : name;
     return {
-      name: properties.SGG_NM,
+      region: name[0],
+      name: name.length > 1 ? name[1] : name[0],
       type: geometry.type,
       data: parseData(geometry.coordinates),
     };
   });
-
+  //   console.log(geometry);
   return geometry;
 }

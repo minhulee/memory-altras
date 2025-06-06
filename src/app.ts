@@ -8,16 +8,24 @@ import {
   HemisphericLight,
   Mesh,
   AbstractMesh,
+  ParticleSystem,
+  Texture,
   Color3,
+  Color4,
   PolygonMeshBuilder,
 } from '@babylonjs/core';
 import earcut from 'earcut';
 import '@babylonjs/inspector';
-import { FramingBehavior } from '@babylonjs/core/Behaviors/Cameras/framingBehavior';
 
 import { loader } from './loader.ts';
-import { BabylonAppContext } from './type.ts';
-import { buildMesh, buildPolygon } from './viewer.ts';
+import { BabylonContext, mGeometry } from './type.ts';
+import {
+  addHandler,
+  buildBabylonContext,
+  buildMesh,
+  buildPolygon,
+  changeFramingTarget,
+} from './viewer.ts';
 
 (window as any).earcut = earcut;
 
@@ -32,85 +40,48 @@ const createCanvas = (): HTMLCanvasElement => {
   return canvas;
 };
 
-const createScene = (canvas: HTMLCanvasElement, engine: Engine): Scene => {
-  const scene = new Scene(engine);
-
-  return scene;
-};
-
-const initApp = (): BabylonAppContext => {
-  const canvas = createCanvas();
-  const engine = new Engine(canvas, true);
-  const scene = createScene(canvas, engine);
-
-  return { canvas, engine, scene };
-};
-
 window.addEventListener('DOMContentLoaded', async () => {
-  let geometry = await loader();
-  const { canvas, engine, scene } = initApp();
-
-  //   geometry = geometry.filter((e) => e.type == 'Polygon');
-  console.log(geometry);
-
-  // 카메라 세팅
-  const camera = new ArcRotateCamera('camera', Math.PI / 2, Math.PI / 3, 15, Vector3.Zero(), scene);
-  camera.attachControl(canvas, true);
-
-  // 조명 세팅
-  //   const light = new HemisphericLight('light', new Vector3(0, 1, 0), scene);
-  //   light.intensity = 0.9;
-
-  // 메테리얼 세팅
-  const semiTransparentMaterial = new StandardMaterial('semiTransparentMaterial', scene);
-  semiTransparentMaterial.diffuseColor = new Color3(0.6, 0.6, 0.6);
-  semiTransparentMaterial.alpha = 0.3;
-  semiTransparentMaterial.backFaceCulling = false;
-
+  const geometry: mGeometry[] = await loader();
+  const context: BabylonContext = buildBabylonContext(createCanvas());
+  const { canvas, engine, scene, camera } = context;
   const polygons = buildPolygon(geometry, scene);
-  console.log(polygons);
   const rootMesh = buildMesh(polygons, scene);
-  rootMesh.getChildMeshes().forEach((mesh) => {
-    mesh.material = semiTransparentMaterial;
-  });
-
-  // camera는 ArcRotateCamera라고 가정
-  camera.useFramingBehavior = true;
-
-  // FramingBehavior 생성 및 카메라에 추가
-  const framingBehavior = new FramingBehavior();
-  camera.addBehavior(framingBehavior);
-
-  framingBehavior.framingTime = 0;
-  framingBehavior.elevationReturnTime = -1;
-  framingBehavior.zoomOnMeshHierarchy(rootMesh);
-  //   framingBehavior.zoomOnMeshHierarchy(meshs[0].mesh);
-
-  const boundingInfo = rootMesh.getHierarchyBoundingVectors(true);
-
-  camera.minZ = 0.1;
-  //   camera.maxZ = boundingInfo.max.subtract(boundingInfo.min).length();
-  camera.maxZ = 10000000000;
-
-  // 원하는 각도 세팅
-  camera.alpha = Math.PI / 15;
-  camera.beta = Math.PI / 10;
-
-  // rootMesh 전체 크기(반지름) 기준 계산
-  const boundingSize = boundingInfo.max.subtract(boundingInfo.min);
-  const maxRadius = boundingSize.length() * 1.5;
-
-  camera.radius = maxRadius;
-
-  //   rootMesh.position = Vector3.Zero();
 
   // inspector show!
-  scene.debugLayer.show();
+  context.scene.debugLayer.show();
+
+  changeFramingTarget(rootMesh);
+  addHandler(context);
+
+  //   프레이밍 변경을 테스트 하기 위한 임시 버튼
+  const btn = document.createElement('button');
+  btn.textContent = 'Next';
+  btn.style.position = 'absolute';
+  btn.style.top = '20px';
+  btn.style.left = '20px';
+  btn.style.width = '150px';
+  btn.style.height = '60px';
+  btn.style.fontSize = '18px';
+  btn.style.zIndex = '999';
+  btn.style.backgroundColor = '#ff5722';
+  btn.style.color = '#fff';
+  btn.style.border = 'none';
+  btn.style.borderRadius = '8px';
+  btn.style.cursor = 'pointer';
+  let i = 0;
+  const targets = rootMesh.getChildMeshes().filter((e) => e.getChildMeshes().length);
+  btn.addEventListener('click', () => {
+    console.log(targets[i].name);
+    changeFramingTarget(targets[i]);
+    i++;
+    if (targets.length <= i) i = 0;
+  });
+  document.body.append(btn);
+  console.log(btn);
 
   engine.runRenderLoop(() => {
     scene.render();
   });
-
   window.addEventListener('resize', () => {
     engine.resize();
   });
